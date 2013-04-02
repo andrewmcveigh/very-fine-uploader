@@ -16,4 +16,6 @@ To start a web server for the application, run:
 
 ## License
 
-Copyright © 2013 FIXME
+The license for Fine Uploader is GPLv3, so this library is too.
+
+Copyright © 2013 Andrew Mcveigh
