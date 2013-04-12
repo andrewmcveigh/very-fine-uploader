@@ -48,7 +48,8 @@
    display: inline;
    }"])
 
-(defn insert-fineuploader [version id upload-url label]
+(defn insert-fineuploader
+  [version id upload-url label & {:keys [span] :as opts :or {span :span12}}]
   (list
     [:div {:id id}]
     [:script
@@ -65,8 +66,8 @@
        text: {
        uploadButton: '<div><i class=\"icon-upload icon-white\"></i> %s</div>'
        },
-       template: '<div class=\"qq-uploader span12\">' +
-       '<pre class=\"qq-upload-drop-area span12\"><span>{dragZoneText}</span></pre>' +
+       template: '<div class=\"qq-uploader %s\">' +
+       '<pre class=\"qq-upload-drop-area %s\"><span>{dragZoneText}</span></pre>' +
        '<div class=\"qq-upload-button btn btn-success\" style= width: auto;\">{uploadButtonText}</div>' +
        '<span class=\"qq-drop-processing\"><span>{dropProcessingText}</span><span class=\"qq-drop-processing-spinner\"></span></span>' +
        '<ul class=\"qq-upload-list\" style=\"margin-top: 10px; text-align: center;\"></ul>' +
@@ -78,7 +79,7 @@
        });
        }
        window.onload = createUploader;"
-       id upload-url label)]))
+       id upload-url label (name span) (name span))]))
 
 (defn fineuploader-css [version]
   [:link
