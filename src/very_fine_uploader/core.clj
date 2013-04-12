@@ -11,19 +11,24 @@
   (:import
     [java.io FileOutputStream InputStream OutputStream]))
 
+(defn ->map [path {:keys [params multipart-params] :as request}]
+  (let [multipart-params (#'kparams/keyify-params multipart-params)
+        multipart? (> (count multipart-params) 0)
+        params (if multipart? multipart-params params)]
+    {:body (if multipart? (:tempfile (:qqfile params)) (:body request))
+     :chunk-index (Integer. (params "chunk" 0))
+     :params params
+     :path (str path "/" (-> params :qqfile :filename))}))
+
+(defn handle-file [{:keys [body path chunk-index]}]
+  (io/copy (try (cast InputStream body) (catch ClassCastException _ body))
+           (cast OutputStream
+                 (FileOutputStream. path (not= 0 chunk-index)))))
+
 (defn handler
-  "Saves uploaded file to \"save-to-path\" location, and generates the
-  appropriate HTTP response to a \"Plupload\" request map."
-  ([path {:keys [params multipart-params] :as request}]
-   (let [multipart-params (#'kparams/keyify-params multipart-params)
-         multipart? (> (count multipart-params) 0)
-         params (if multipart? multipart-params params)
-         path (str path "/" (-> params :qqfile :filename))
-         chunk-index (Integer. (params "chunk" 0))
-         body (if multipart? (:tempfile (:qqfile params)) (:body request))]
-     (io/copy (try (cast InputStream body) (catch ClassCastException _ body))
-              (cast OutputStream
-                    (FileOutputStream. path (not= 0 chunk-index)))))))
+  "Saves uploaded file to \"path\" location, from request."
+  [path request]
+  (handle-file (->map path request)))
 
 (def response-success
   {:status 200
