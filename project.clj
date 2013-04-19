@@ -5,6 +5,7 @@
   :license {:name "GPLv3"
             :url "http://www.gnu.org/licenses/gpl.html"}
   :dependencies [[org.clojure/clojure "1.4.0"]
+                 [org.clojure/data.json "0.2.2"]
                  [compojure "1.1.5"]
                  [hiccup "1.0.3"]]
   :plugins [[lein-ring "0.8.2"]]

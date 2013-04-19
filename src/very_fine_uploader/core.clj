@@ -1,6 +1,7 @@
 (ns very-fine-uploader.core 
   (:require
     [clojure.java.io :as io]
+    [clojure.data.json :as json]
     [compojure.core :refer [defroutes GET POST]]
     [compojure.handler :as handler]
     [compojure.route :as route]
@@ -34,6 +35,11 @@
   {:status 200
    :headers {"Content-Type" "application/json"}
    :body "{\"success\": true}"})
+
+(defn response-success-merge [m]
+  {:status 200
+   :headers {"Content-Type" "application/json"}
+   :body (json/write-str (merge {:success true} m))})
 
 (def bootstrap-style-block
   [:style {:type "text/css"}
@@ -77,9 +83,23 @@
        '<span class=\"qq-drop-processing\"><span>{dropProcessingText}</span><span class=\"qq-drop-processing-spinner\"></span></span>' +
        '<ul class=\"qq-upload-list\" style=\"margin-top: 10px; text-align: center;\"></ul>' +
        '</div>',
+       fileTemplate: '<li>' +
+           '<div class=\"qq-progress-bar\"></div>' +
+           '<span class=\"qq-upload-spinner\"></span>' +
+           '<span class=\"qq-upload-finished\"></span>' +
+           '<span class=\"qq-upload-file\"></span>' +
+           '<span class=\"qq-upload-size\"></span>' +
+           '<a class=\"qq-upload-cancel\" href=\"#\">{cancelButtonText}</a>' +
+           '<a class=\"qq-upload-retry\" href=\"#\">{retryButtonText}</a>' +
+           '<a class=\"qq-upload-delete\" href=\"#\">{deleteButtonText}</a>' +
+           '<span class=\"qq-upload-status-text\">{statusText}</span>' +
+           '</li>',
        classes: {
        success: 'alert alert-success',
        fail: 'alert alert-error'
+       },
+       callbacks: {
+       onComplete: function (id, name, response) { console.log(id, name, response); }
        }
        });
        }
