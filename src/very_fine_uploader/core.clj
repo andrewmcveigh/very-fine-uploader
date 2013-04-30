@@ -1,5 +1,6 @@
 (ns very-fine-uploader.core 
   (:require
+    [clojure.string :as string]
     [clojure.java.io :as io]
     [clojure.data.json :as json]
     [compojure.core :refer [defroutes GET POST]]
@@ -60,14 +61,25 @@
    }"])
 
 (defn insert-fineuploader
-  [version id upload-url label & {:keys [span] :as opts :or {span :span12}}]
+  [version id upload-url label & {:keys [span fn-call]
+                                  :as opts
+                                  :or {span :span12}}]
   (list
-    [:div {:id id}]
+    (when-not fn-call [:div {:id id}])
     [:script
      {:type "text/javascript"
       :src (format "/plugins/fineuploader-%1$s/fineuploader-%1$s.min.js" version)}]
     [:script {:type "text/javascript"}
-     (format
+     (if fn-call
+       (format "window.onload = function() { %s(\"%s\", \"%s\", \"%s\"); };"
+               (string/replace (if (or (symbol? fn-call)
+                                       (keyword? fn-call))
+                                 (str (namespace fn-call) \. (name fn-call))
+                                 fn-call)
+                               #"-|/"
+                               {"-" "_" "/" "."})
+               id upload-url label)
+       (format
        "function createUploader() {
        var uploader = new qq.FineUploader({
        element: document.getElementById('%s'),
@@ -99,12 +111,76 @@
        fail: 'alert alert-error'
        },
        callbacks: {
-       onComplete: function (id, name, response) { console.log(id, name, response); }
+       onComplete: function (id, name, response) {
+       console.log(id, name, response);
+       if (response.image) $('#image-attachments').append(response.image.markup);
+       }
        }
        });
        }
        window.onload = createUploader;"
-       id upload-url label (name span) (name span))]))
+       id upload-url label (name span) (name span)))]))
+
+(defn insert-fineuploader-debug
+  [version id upload-url label & {:keys [span fn-call]
+                                  :as opts
+                                  :or {span :span12}}]
+  (list
+    (when-not fn-call [:div {:id id}])
+    [:script
+     {:type "text/javascript"
+      :src (format "/plugins/fineuploader-%1$s/fineuploader-%1$s.js" version)}]
+    [:script {:type "text/javascript"}
+     (if fn-call
+       (format "window.onload = function() { %s(\"%s\", \"%s\", \"%s\"); };"
+               (string/replace (if (or (symbol? fn-call)
+                                       (keyword? fn-call))
+                                 (str (namespace fn-call) \. (name fn-call))
+                                 fn-call)
+                               #"-|/"
+                               {"-" "_" "/" "."})
+               id upload-url label)
+       (format
+       "function createUploader() {
+       var uploader = new qq.FineUploader({
+       element: document.getElementById('%s'),
+       request: {
+       endpoint: '%s'
+       },
+       text: {
+       uploadButton: '<div><i class=\"icon-upload icon-white\"></i> %s</div>'
+       },
+       template: '<div class=\"qq-uploader %s\">' +
+       '<pre class=\"qq-upload-drop-area %s\"><span>{dragZoneText}</span></pre>' +
+       '<div class=\"qq-upload-button btn btn-success\" style= width: auto;\">{uploadButtonText}</div>' +
+       '<span class=\"qq-drop-processing\"><span>{dropProcessingText}</span><span class=\"qq-drop-processing-spinner\"></span></span>' +
+       '<ul class=\"qq-upload-list\" style=\"margin-top: 10px; text-align: center;\"></ul>' +
+       '</div>',
+       fileTemplate: '<li>' +
+           '<div class=\"qq-progress-bar\"></div>' +
+           '<span class=\"qq-upload-spinner\"></span>' +
+           '<span class=\"qq-upload-finished\"></span>' +
+           '<span class=\"qq-upload-file\"></span>' +
+           '<span class=\"qq-upload-size\"></span>' +
+           '<a class=\"qq-upload-cancel\" href=\"#\">{cancelButtonText}</a>' +
+           '<a class=\"qq-upload-retry\" href=\"#\">{retryButtonText}</a>' +
+           '<a class=\"qq-upload-delete\" href=\"#\">{deleteButtonText}</a>' +
+           '<span class=\"qq-upload-status-text\">{statusText}</span>' +
+           '</li>',
+       classes: {
+       success: 'alert alert-success',
+       fail: 'alert alert-error'
+       },
+       callbacks: {
+       onComplete: function (id, name, response) {
+       console.log(id, name, response);
+       if (response.image) $('#image-attachments').append(response.image.markup);
+       }
+       }
+       });
+       }
+       window.onload = createUploader;"
+       id upload-url label (name span) (name span)))]))
 
 (defn fineuploader-css [version]
   [:link
