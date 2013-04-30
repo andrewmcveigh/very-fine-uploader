@@ -1,4 +1,4 @@
-(defproject com.andrewmcveigh/very-fine-uploader "0.1.0-SNAPSHOT"
+(defproject com.andrewmcveigh/very-fine-uploader "0.1.0"
   :description "Packaged Fine Uploader (http://fineuploader.com/) for easy use
                from Clojure."
   :url "http://github.com/andrewmcveigh/very-fine-uploader"
