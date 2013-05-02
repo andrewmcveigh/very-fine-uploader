@@ -9,4 +9,6 @@
                  [compojure "1.1.5"]
                  [hiccup "1.0.3"]]
   :plugins [[lein-ring "0.8.2"]]
-  :ring {:handler very-fine-uploader.core/app})
+  :ring {:handler very-fine-uploader.core/app}
+  :repositories [["snapshots" {:url "https://clojars.org/repo/" :creds :gpg}]
+                 ["releases" {:url "https://clojars.org/repo/" :creds :gpg}]])
