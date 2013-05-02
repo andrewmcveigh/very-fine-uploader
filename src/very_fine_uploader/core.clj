@@ -16,7 +16,9 @@
 (defn ->map [path {:keys [params multipart-params] :as request}]
   (let [multipart-params (#'kparams/keyify-params multipart-params)
         multipart? (> (count multipart-params) 0)
-        params (if multipart? multipart-params params)]
+        {{filename :filename} :qqfile
+         :as params} (if multipart? multipart-params params)
+        filename (last (string/split filename #"\\"))]
     {:body (if multipart? (:tempfile (:qqfile params)) (:body request))
      :chunk-index (Integer. (params "chunk" 0))
      :params params
