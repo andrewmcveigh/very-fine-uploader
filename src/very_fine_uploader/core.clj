@@ -22,7 +22,7 @@
     {:body (if multipart? (:tempfile (:qqfile params)) (:body request))
      :chunk-index (Integer. (params "chunk" 0))
      :params params
-     :path (str path "/" (-> params :qqfile :filename))}))
+     :path (str path "/" filename)}))
 
 (defn handle-file [{:keys [body path chunk-index]}]
   (io/copy (try (cast InputStream body) (catch ClassCastException _ body))
