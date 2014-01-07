@@ -62,27 +62,37 @@
    display: inline;
    }"])
 
+(defn join-path [& args]
+  {:pre [(every? (comp not nil?) args)]}
+  (let [ensure-no-delims #(string/replace % #"(?:^/)|(?:/$)" "")]
+    (str (when (re-seq #"^/" (first args)) \/)
+         (string/join "/" (map ensure-no-delims args)))))
+
 (defn insert-fineuploader
-  [version id upload-url label & {:keys [span fn-call]
+  [version id upload-url label & {:keys [span fn-call root]
                                   :as opts
                                   :or {span :span12}}]
-  (list
-    (when-not fn-call [:div {:id id}])
-    [:script
-     {:type "text/javascript"
-      :src (format "/plugins/fineuploader-%1$s/fineuploader-%1$s.min.js" version)}]
-    [:script {:type "text/javascript"}
-     (if fn-call
-       (format "window.onload = function() { %s(\"%s\", \"%s\", \"%s\"); };"
-               (string/replace (if (or (symbol? fn-call)
-                                       (keyword? fn-call))
-                                 (str (namespace fn-call) \. (name fn-call))
-                                 fn-call)
-                               #"-|/"
-                               {"-" "_" "/" "."})
-               id upload-url label)
-       (format
-       "function createUploader() {
+  (let [plugin (format "/plugins/fineuploader-%1$s/fineuploader-%1$s.min.js"
+                       version)]
+    (list
+     (when-not fn-call [:div {:id id}])
+     [:script
+      {:type "text/javascript"
+       :src (if root
+              (join-path (if (.startsWith root "/") root (str "/" root)) plugin)
+              plugin)}]
+     [:script {:type "text/javascript"}
+      (if fn-call
+        (format "window.onload = function() { %s(\"%s\", \"%s\", \"%s\"); };"
+                (string/replace (if (or (symbol? fn-call)
+                                        (keyword? fn-call))
+                                  (str (namespace fn-call) \. (name fn-call))
+                                  fn-call)
+                                #"-|/"
+                                {"-" "_" "/" "."})
+                id upload-url label)
+        (format
+         "function createUploader() {
        var uploader = new qq.FineUploader({
        element: document.getElementById('%s'),
        request: {
@@ -121,7 +131,7 @@
        });
        }
        window.onload = createUploader;"
-       id upload-url label (name span) (name span)))]))
+         id upload-url label (name span) (name span)))])))
 
 (defn insert-fineuploader-debug
   [version id upload-url label & {:keys [span fn-call]
